@@ -70,16 +70,26 @@ static func _load_equipment() -> void:
 
 static func _scan_dir(path: String) -> void:
 	var contents := OSPath.get_contents(path)
+
+	# Recurse into subdirs
 	for folder in contents.dirs:
 		_scan_dir(folder)
+
+	# Files
 	for file in contents.files:
-		if file.get_extension() not in ['tres', 'res']: # only use .res  , .tres is renamed to .tres.remap on export (same for .tscn)
+		var ext = file.get_extension().to_lower()
+
+		# We only care about .res here; ignore .tres completely
+		if ext != "res":
 			continue
-		var suffix: String = file.get_basename().get_extension()
-		if suffix in ['material', 'mhclo']:
+
+		# Filter out non-equipment .res files, e.g. *.material.res, *.mhclo.res, etc.
+		var base = file.get_file()
+		if base.ends_with(".material.res") or base.ends_with(".mhclo.res"):
 			continue
+
 		var equip = HumanizerResourceService.load_resource(file)
 		if equip is HumanizerEquipmentType:
 			add_equipment_type(equip)
-		else:
+		else: 
 			printerr("unexpected resource type " + file)

@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://c8enkc5klctac"
 path.s3tc="res://.godot/imported/young_lightskinned_female_diffuse.png-65c523e4c49312f36ceabe907325d5d0.s3tc.ctex"
+path.etc2="res://.godot/imported/young_lightskinned_female_diffuse.png-65c523e4c49312f36ceabe907325d5d0.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://addons/humanizer/data/assets/equipment/body/Default/young_caucasian_female/young_lightskinned_female_diffuse.png"
-dest_files=["res://.godot/imported/young_lightskinned_female_diffuse.png-65c523e4c49312f36ceabe907325d5d0.s3tc.ctex"]
+dest_files=["res://.godot/imported/young_lightskinned_female_diffuse.png-65c523e4c49312f36ceabe907325d5d0.s3tc.ctex", "res://.godot/imported/young_lightskinned_female_diffuse.png-65c523e4c49312f36ceabe907325d5d0.etc2.ctex"]
 
 [params]
 

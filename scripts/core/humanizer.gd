@@ -129,40 +129,82 @@ func get_group_bake_arrays(group_name:String): #transparent, opaque or all
 func set_skin_color(color:Color):
 	human_config.skin_color = color
 	var body = human_config.get_equipment_in_slot("Body")
-	body.material_config.generate_material_3D(materials[body.type])
-	#material_updated.emit(body)
+	if body == null:
+		return
+
+	var mat := materials.get(body.type)
+	if mat == null:
+		return
+
+	body.material_config.apply_to_material(mat, color)
 	
 func set_eye_color(color:Color):
 	human_config.eye_color = color
-	var slots = ["LeftEye","RightEye","Eyes"]
+	var slots = ["LeftEye", "RightEye", "Eyes"]
+
 	for equip in human_config.get_equipment_in_slots(slots):
-		equip.material_config.generate_material_3D(materials[equip.type])
-		#material_updated.emit(equip)
+		var mat := materials.get(equip.type)
+		if mat == null:
+			continue
+		equip.material_config.apply_to_material(mat, color)
 		
 func set_hair_color(color:Color):
 	human_config.hair_color = color
 	var hair_equip = human_config.get_equipment_in_slot("Hair")
 	if hair_equip != null:
-		hair_equip.material_config.generate_material_3D(materials[hair_equip.type])
+		var mat := materials.get(hair_equip.type)
+		if mat != null:
+			hair_equip.material_config.apply_to_material(mat, color)
+
 	set_eyebrow_color(human_config.eyebrow_color)
 
 func set_eyebrow_color(color:Color):
 	human_config.eyebrow_color = color
-	var slots = ["LeftEyebrow","RightEyebrow","Eyebrows"]
+	var slots = ["LeftEyebrow", "RightEyebrow", "Eyebrows"]
+
 	for eyebrow_equip in human_config.get_equipment_in_slots(slots):
-		materials[eyebrow_equip.type].albedo_color = color
-		#material_updated.emit(eyebrow_equip)
+		var mat := materials.get(eyebrow_equip.type)
+		if mat == null:
+			continue
+
+		_set_material_color(mat, color, "albedo")
+
+func _set_material_color(mat: Material, color: Color, uniform_name: StringName = "albedo") -> void:
+	if mat == null:
+		return
+
+	if mat is ShaderMaterial:
+		var sm := mat as ShaderMaterial
+		if sm.shader != null and sm.shader.has_parameter(uniform_name):
+			sm.set_shader_parameter(uniform_name, color)
+	elif mat is StandardMaterial3D:
+		var std := mat as StandardMaterial3D
+		std.albedo_color = color
 
 func init_equipment_material(equip:HumanizerEquipment): #called from thread
-	#print("initializing equipment")
 	var equip_type = equip.get_type()
-	var material = StandardMaterial3D.new()
-	material.resource_local_to_scene = true
+	var mat_config: HumanizerMaterial = equip.material_config
+
+	var material: Material
+
+	# --- NEW: shader-aware branch ---
+	if mat_config.is_shader_base():
+		# Base is a ShaderMaterial .tres – duplicate it and use as-is
+		var base_res = HumanizerResourceService.load_resource(mat_config.base_material_path)
+		var shader_mat := (base_res as ShaderMaterial).duplicate()
+		shader_mat.resource_local_to_scene = true
+		material = shader_mat
+	else:
+		# Old behavior: standard PBR pipeline driven by overlays
+		var std_mat := StandardMaterial3D.new()
+		std_mat.resource_local_to_scene = true
+		material = std_mat
+
+		if not mat_config.done_generating.is_connected(check_materials_done_generating):
+			mat_config.done_generating.connect(check_materials_done_generating)
+		mat_config.generate_material_3D(std_mat)
+
 	materials[equip.type] = material
-	var mat_config = equip.material_config
-	if not mat_config.done_generating.is_connected(check_materials_done_generating):
-		mat_config.done_generating.connect(check_materials_done_generating)
-	mat_config.generate_material_3D(material)
 
 func check_materials_done_generating():
 	for equip in human_config.equipment.values():
@@ -175,10 +217,17 @@ func set_equipment_material(equip:HumanizerEquipment, material_name: String)-> v
 	human_config.set_equipment_material(equip,material_name)
 	init_equipment_material(equip)
 
-func update_material(equip_type:String): #from the material config
+func update_material(equip_type: String) -> void:
 	var equip = human_config.equipment[equip_type]
-	equip.material_config.generate_material_3D(materials[equip.type])
-	#material_updated.emit(equip)
+	var mat_config: HumanizerMaterial = equip.material_config
+	var material = materials[equip_type]
+
+	# If this is a shader-based material, we don’t try to rebuild it
+	if mat_config.is_shader_base():
+		return
+
+	# Standard case – re-generate properties/textures on the existing StandardMaterial3D
+	mat_config.generate_material_3D(material as StandardMaterial3D)
 
 func get_mesh(mesh_name:String):
 	var mesh = ArrayMesh.new()

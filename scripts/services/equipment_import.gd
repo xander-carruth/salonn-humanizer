@@ -314,3 +314,38 @@ static func _build_rigged_bone_arrays(mhclo:MHCLO,glb:String) -> Dictionary:
 	rigged_bone_weights.bones = bones_override
 	rigged_bone_weights.weights = weights_override
 	return rigged_bone_weights
+
+
+# NOTE: we do NOT delete:
+#   - the .mhclo itself
+#   - .obj
+#   - textures / materials
+static func delete_equipment_for_mhclo(mhclo_path: String) -> void:
+	var res_path      := get_equipment_resource_path(mhclo_path)  
+	var json_path     := get_import_settings_path(mhclo_path) 
+	var rigged_res    := res_path.get_basename() + "_Rigged.res"
+
+	var to_delete: Array[String] = [res_path, json_path, rigged_res]
+
+	for path in to_delete:
+		if FileAccess.file_exists(path):
+			var err := DirAccess.remove_absolute(path)
+			if err != OK:
+				push_error("Failed to delete: %s (err %d)" % [path, err])
+
+static func delete_equipment_folder(folder: String) -> void:
+	for file in OSPath.get_files(folder):
+		var ext := file.get_extension().to_lower()
+
+		# delete any .res (equipment resources)
+		if ext == "res":
+			var err := DirAccess.remove_absolute(file)
+			if err != OK:
+				push_error("Failed to delete: %s (err %d)" % [file, err])
+			continue
+
+		# delete any *import_settings.json
+		if file.ends_with("import_settings.json"):
+			var err2 := DirAccess.remove_absolute(file)
+			if err2 != OK:
+				push_error("Failed to delete: %s (err %d)" % [file, err2])

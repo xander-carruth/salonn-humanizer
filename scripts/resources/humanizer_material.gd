@@ -44,6 +44,9 @@ func duplicate(subresources=false):
 		return dupe
 
 func generate_material_3D(material:StandardMaterial3D)->void:
+	if not (material is StandardMaterial3D):
+		return
+
 	var base_material := StandardMaterial3D.new()
 	if FileAccess.file_exists(base_material_path):
 		base_material = HumanizerResourceService.load_resource(base_material_path)
@@ -187,8 +190,33 @@ func remove_overlay_by_name(name: String) -> void:
 	overlays.remove_at(idx)
 	changed.emit()
 	
+func is_shader_base() -> bool:
+	if base_material_path in ["", null]:
+		return false
+	if not FileAccess.file_exists(base_material_path):
+		return false
+	var res = HumanizerResourceService.load_resource(base_material_path)
+	return res is ShaderMaterial
+	
 func _get_index(name: String) -> int:
 	for i in overlays.size():
 		if overlays[i].resource_name == name:
 			return i
 	return -1
+
+func apply_to_material(mat: Material, base_color: Color) -> void:
+	if mat is ShaderMaterial:
+		_apply_to_shader_material(mat as ShaderMaterial, base_color)
+	elif mat is StandardMaterial3D:
+		var std := mat as StandardMaterial3D
+		generate_material_3D(std)      # existing overlay pipeline
+		std.albedo_color = base_color  # final tint
+
+func _apply_to_shader_material(sm: ShaderMaterial, base_color: Color) -> void:
+	var tmp := StandardMaterial3D.new()
+	generate_material_3D(tmp)
+
+	if tmp.albedo_texture != null:
+		sm.set_shader_parameter("object_texture", tmp.albedo_texture)
+
+	sm.set_shader_parameter("albedo", base_color)

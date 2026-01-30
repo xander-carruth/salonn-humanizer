@@ -323,9 +323,12 @@ func init_equipment(equip: HumanizerEquipment) -> void:
 	mesh_inst.trigger_material_update.connect(humanizer.update_material)
 	mesh_inst.name = equip.type
 	mesh_inst.mesh = humanizer.get_mesh(equip.type)
-	var sf_material :StandardMaterial3D = humanizer.materials[equip.type]
-	sf_material.resource_local_to_scene = true
-	mesh_inst.set_surface_override_material(0,sf_material)
+	
+	var mat: Material = humanizer.materials[equip.type]
+	if mat != null:
+		mat.resource_local_to_scene = true
+		mesh_inst.set_surface_override_material(0, mat)
+		
 	mesh_inst.material_config = equip.material_config
 	if human_config.transforms.has(equip_type.resource_name):
 		mesh_inst.transform = Transform3D(human_config.transforms[equip.resource_name])

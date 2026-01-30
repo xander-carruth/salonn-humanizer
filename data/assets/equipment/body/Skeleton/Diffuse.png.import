@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://d3molhig5kthb"
 path.s3tc="res://.godot/imported/Diffuse.png-004a2bc37472cc7259e76590ff2497fe.s3tc.ctex"
+path.etc2="res://.godot/imported/Diffuse.png-004a2bc37472cc7259e76590ff2497fe.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://addons/humanizer/data/assets/equipment/body/Skeleton/Diffuse.png"
-dest_files=["res://.godot/imported/Diffuse.png-004a2bc37472cc7259e76590ff2497fe.s3tc.ctex"]
+dest_files=["res://.godot/imported/Diffuse.png-004a2bc37472cc7259e76590ff2497fe.s3tc.ctex", "res://.godot/imported/Diffuse.png-004a2bc37472cc7259e76590ff2497fe.etc2.ctex"]
 
 [params]
 

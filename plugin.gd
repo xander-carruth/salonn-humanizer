@@ -21,6 +21,8 @@ const menu_ids := {
 	'reload_registry': 20,
 	'purge_generated_assets': 29,
 	'asset_importer': 30,
+	'import_selected_folder': 31,
+	'delete_equipment': 32,
 	'test': 999,
 }
 
@@ -69,6 +71,9 @@ func _add_tool_submenu() -> void:
 	popup_menu.add_item('Run All Preprocessing', menu_ids.process_raw_data)
 	popup_menu.add_item('Purge Generated Asset Resources', menu_ids.purge_generated_assets)
 	popup_menu.add_item('Import All Assets', menu_ids.asset_importer)
+	popup_menu.add_item('Import Selected Folder', menu_ids.import_selected_folder)
+	popup_menu.add_item('Unimport Selected Folder', menu_ids.delete_equipment)
+	
 	popup_menu.add_item('Reload Registry', menu_ids.reload_registry)
 	popup_menu.add_item('Run Test Function', menu_ids.test)
 	
@@ -94,6 +99,10 @@ func _handle_menu_event(id) -> void:
 		_process_raw_data()
 	elif id == menu_ids.asset_importer:
 		thread.start(_import_assets)
+	elif id == menu_ids.import_selected_folder:
+		thread.start(_import_selected_folder)
+	elif id == menu_ids.delete_equipment:
+		thread.start(_delete_selected_equipment)          
 	elif id == menu_ids.purge_generated_assets:
 		thread.start(_purge_assets)
 	elif id == menu_ids.reload_registry:
@@ -132,6 +141,61 @@ func _import_assets() -> void:
 	
 func _purge_assets() -> void:
 	HumanizerAssetImporter.new().run(true)
+	
+func _import_selected_folder() -> void:
+	var fs_dock := get_editor_interface().get_file_system_dock()
+	var paths: PackedStringArray = get_editor_interface().get_selected_paths()
+
+	if paths.is_empty():
+		# fallback: use current path if no explicit selection
+		var current = fs_dock.get_current_path()
+		if current != "":
+			paths.append(current)
+
+	if paths.is_empty():
+		printerr("Humanizer: No path selected in FileSystem dock.")
+		return
+
+	# Prefer a directory; if you selected a file, use its containing folder
+	var target_path := paths[0]
+	if not DirAccess.dir_exists_absolute(target_path):
+		target_path = target_path.get_base_dir()
+
+	if not DirAccess.dir_exists_absolute(target_path):
+		printerr("Humanizer: Selected path is not a valid directory: ", target_path)
+		return
+
+	print("Humanizer: Importing folder: ", target_path)
+
+	# 1) Make sure .import_settings.json exist for mhclo in this subtree
+	HumanizerEquipmentImportService.scan_for_missing_import_settings(target_path, false)
+
+	# 2) Generate materials just for this folder
+	HumanizerMaterialService.import_materials(target_path)
+
+	# 3) Import all equipment under this folder (your existing logic)
+	HumanizerEquipmentImportService.import_folder(target_path)
+
+	# 4) Refresh registry once
+	HumanizerRegistry.load_all()
+	print("Humanizer: Finished importing folder ", target_path)
+
+func _delete_selected_equipment() -> void:
+	var paths: PackedStringArray = get_editor_interface().get_selected_paths()
+	if paths.is_empty():
+		push_error("Select an .mhclo or an equipment folder in the FileSystem dock first.")
+		return
+
+	for p in paths:
+		if p.ends_with(".mhclo"):
+			HumanizerEquipmentImportService.delete_equipment_for_mhclo(p)
+		elif DirAccess.dir_exists_absolute(p):
+			HumanizerEquipmentImportService.delete_equipment_folder(p)
+
+	HumanizerResourceService.clear_cache()
+	HumanizerRegistry.load_all()
+	print("Humanizer: deleted selected equipment and reloaded registry.")
+
 	
 func _test() -> void:
 	print(typeof('test'))

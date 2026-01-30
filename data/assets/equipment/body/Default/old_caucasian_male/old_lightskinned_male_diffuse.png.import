@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://cbn0br3smvcnf"
 path.s3tc="res://.godot/imported/old_lightskinned_male_diffuse.png-5672f48a5aa9b6edc8c20b40dcc8e802.s3tc.ctex"
+path.etc2="res://.godot/imported/old_lightskinned_male_diffuse.png-5672f48a5aa9b6edc8c20b40dcc8e802.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://addons/humanizer/data/assets/equipment/body/Default/old_caucasian_male/old_lightskinned_male_diffuse.png"
-dest_files=["res://.godot/imported/old_lightskinned_male_diffuse.png-5672f48a5aa9b6edc8c20b40dcc8e802.s3tc.ctex"]
+dest_files=["res://.godot/imported/old_lightskinned_male_diffuse.png-5672f48a5aa9b6edc8c20b40dcc8e802.s3tc.ctex", "res://.godot/imported/old_lightskinned_male_diffuse.png-5672f48a5aa9b6edc8c20b40dcc8e802.etc2.ctex"]
 
 [params]
 
