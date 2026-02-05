@@ -49,7 +49,11 @@ func generate_material_3D(material:StandardMaterial3D)->void:
 
 	var base_material := StandardMaterial3D.new()
 	if FileAccess.file_exists(base_material_path):
-		base_material = HumanizerResourceService.load_resource(base_material_path)
+		var res = HumanizerResourceService.load_resource(base_material_path)
+		# Only treat it as a StandardMaterial3D if it actually is one
+		if res is StandardMaterial3D:
+			base_material = res
+			
 		for prop_name in material_property_names:
 			material.set(prop_name,base_material.get(prop_name))
 		material.resource_local_to_scene = true
@@ -73,6 +77,8 @@ func generate_material_3D(material:StandardMaterial3D)->void:
 		if not overlays[0].ao_texture_path in ["",null]:
 			material.set_texture(BaseMaterial3D.TEXTURE_AMBIENT_OCCLUSION, HumanizerResourceService.load_resource(overlays[0].ao_texture_path))
 	else:
+		print("overlay size 2")
+		
 		is_generating = true
 		# awaiting outside the main thread will switch to the main thread if the signal awaited is emitted by the main thread
 		HumanizerJobQueue.add_job_main_thread(func():
@@ -84,6 +90,7 @@ func generate_material_3D(material:StandardMaterial3D)->void:
 			material.normal_texture = textures.normal
 			material.normal_scale = 1
 			material.ao_texture = textures.ao
+
 			is_generating = false
 			done_generating.emit()
 		)
@@ -93,6 +100,7 @@ func _update_material() -> Dictionary:
 	var textures : Dictionary = {}
 	if overlays.size() <= 1:
 		return textures
+		
 	for texture in TEXTURE_LAYERS: #albedo, normal, ambient occulsion ect..
 		var texture_size = Vector2(2**11,2**11)
 		if overlays[0].albedo_texture_path != "":
@@ -102,13 +110,16 @@ func _update_material() -> Dictionary:
 		image_vp.size = texture_size
 		image_vp.transparent_bg = true
 	
-
+	
 		for overlay in overlays:
 			if overlay == null:
 				continue
+
 			var path = overlay.get(texture + '_texture_path')
+
 			if path == null || path == '':
 				if texture == 'albedo':
+					print(overlay.albedo_texture_path)
 					var im_col_rect = ColorRect.new()
 					im_col_rect.color = overlay.color
 					image_vp.add_child(im_col_rect)
@@ -206,17 +217,49 @@ func _get_index(name: String) -> int:
 
 func apply_to_material(mat: Material, base_color: Color) -> void:
 	if mat is ShaderMaterial:
-		_apply_to_shader_material(mat as ShaderMaterial, base_color)
+		generate_shader_material(mat as ShaderMaterial, base_color)
 	elif mat is StandardMaterial3D:
 		var std := mat as StandardMaterial3D
 		generate_material_3D(std)      # existing overlay pipeline
 		std.albedo_color = base_color  # final tint
 
-func _apply_to_shader_material(sm: ShaderMaterial, base_color: Color) -> void:
+func generate_shader_material(sm: ShaderMaterial, base_color: Color) -> void:
+	# 1) Reuse overlay / mhmat pipeline to get a baked base albedo
 	var tmp := StandardMaterial3D.new()
 	generate_material_3D(tmp)
 
-	if tmp.albedo_texture != null:
+	if sm.shader == null:
+		return
+	var shader := sm.shader
+	# Base texture
+	if tmp.albedo_texture != null and ShaderHelper.shader_has_param(shader, "object_texture"):
 		sm.set_shader_parameter("object_texture", tmp.albedo_texture)
 
-	sm.set_shader_parameter("albedo", base_color)
+	# Base tint (skin/hair/eye color)
+	if ShaderHelper.shader_has_param(shader, "albedo"):
+		sm.set_shader_parameter("albedo", base_color)
+
+	# Overlay support (first overlay only for now)
+	if not ShaderHelper.shader_has_param(shader, "use_overlay"):
+		return
+
+	if overlays.is_empty():
+		sm.set_shader_parameter("use_overlay", false)
+		return
+
+	var ov: HumanizerOverlay = overlays[0]
+
+	sm.set_shader_parameter("use_overlay", true)
+
+	if ShaderHelper.shader_has_param(shader, "overlay_color"):
+		sm.set_shader_parameter("overlay_color", ov.color)
+
+	if ShaderHelper.shader_has_param(shader, "overlay_opacity"):
+		var opacity := 1.0 # or some field from ov if you add one
+		sm.set_shader_parameter("overlay_opacity", opacity)
+
+	if ShaderHelper.shader_has_param(shader, "overlay_texture"):
+		var tex: Texture2D = null
+		if ov.albedo_texture_path != "" and ov.albedo_texture_path != null:
+			tex = HumanizerResourceService.load_resource(ov.albedo_texture_path)
+		sm.set_shader_parameter("overlay_texture", tex)

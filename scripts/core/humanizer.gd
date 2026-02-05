@@ -143,10 +143,8 @@ func set_eye_color(color:Color):
 	var slots = ["LeftEye", "RightEye", "Eyes"]
 
 	for equip in human_config.get_equipment_in_slots(slots):
-		var mat := materials.get(equip.type)
-		if mat == null:
-			continue
-		equip.material_config.apply_to_material(mat, color)
+		if equip.material_config.overlays.size() > 1:
+			equip.material_config.overlays[1].color = color
 		
 func set_hair_color(color:Color):
 	human_config.hair_color = color
@@ -175,7 +173,7 @@ func _set_material_color(mat: Material, color: Color, uniform_name: StringName =
 
 	if mat is ShaderMaterial:
 		var sm := mat as ShaderMaterial
-		if sm.shader != null and sm.shader.has_parameter(uniform_name):
+		if sm.shader != null and ShaderHelper.shader_has_param(sm.shader, uniform_name):
 			sm.set_shader_parameter(uniform_name, color)
 	elif mat is StandardMaterial3D:
 		var std := mat as StandardMaterial3D
@@ -193,6 +191,12 @@ func init_equipment_material(equip:HumanizerEquipment): #called from thread
 		var base_res = HumanizerResourceService.load_resource(mat_config.base_material_path)
 		var shader_mat := (base_res as ShaderMaterial).duplicate()
 		shader_mat.resource_local_to_scene = true
+
+		# Apply overlays + base color (use white as default tint here;
+		# runtime color setters will re-apply with the proper color).
+		var base_color := _get_base_color_for_equip(equip)
+		mat_config.apply_to_material(shader_mat, base_color)
+
 		material = shader_mat
 	else:
 		# Old behavior: standard PBR pipeline driven by overlays
@@ -217,17 +221,52 @@ func set_equipment_material(equip:HumanizerEquipment, material_name: String)-> v
 	human_config.set_equipment_material(equip,material_name)
 	init_equipment_material(equip)
 
-func update_material(equip_type: String) -> void:
-	var equip = human_config.equipment[equip_type]
-	var mat_config: HumanizerMaterial = equip.material_config
-	var material = materials[equip_type]
+#func update_material(equip_type: String) -> void:
+	#var equip = human_config.equipment[equip_type]
+	#var mat_config: HumanizerMaterial = equip.material_config
+	#var material = materials[equip_type]
+#
+	## If this is a shader-based material, we don’t try to rebuild it
+	#if mat_config.is_shader_base():
+		#return
+#
+	## Standard case – re-generate properties/textures on the existing StandardMaterial3D
+	#mat_config.generate_material_3D(material as StandardMaterial3D)
 
-	# If this is a shader-based material, we don’t try to rebuild it
-	if mat_config.is_shader_base():
+func update_material(equip_type: String) -> void:
+	var equip: HumanizerEquipment = human_config.equipment.get(equip_type)
+	if equip == null:
 		return
 
-	# Standard case – re-generate properties/textures on the existing StandardMaterial3D
-	mat_config.generate_material_3D(material as StandardMaterial3D)
+	var mat: Material = materials.get(equip.type)
+	if mat == null:
+		return
+
+	var mat_config: HumanizerMaterial = equip.material_config
+	if mat_config == null:
+		return
+
+	if mat is StandardMaterial3D:
+		# Original behavior: rebuild the StandardMaterial3D from overlays/base mat
+		mat_config.generate_material_3D(mat as StandardMaterial3D)
+	else:
+		# NEW: shader-based path (toon, etc.)
+		var base_color := _get_base_color_for_equip(equip)
+		mat_config.apply_to_material(mat, base_color)
+
+func _get_base_color_for_equip(equip: HumanizerEquipment) -> Color:
+	var t = equip.get_type()
+
+	if t.in_slot(["Body"]):
+		return human_config.skin_color
+	elif t.in_slot(["Hair"]):
+		return human_config.hair_color
+	elif t.in_slot(["LeftEye", "RightEye", "Eyes"]):
+		return human_config.eye_color
+	elif t.in_slot(["LeftEyebrow", "RightEyebrow", "Eyebrows"]):
+		return human_config.eyebrow_color
+
+	return Color.WHITE
 
 func get_mesh(mesh_name:String):
 	var mesh = ArrayMesh.new()

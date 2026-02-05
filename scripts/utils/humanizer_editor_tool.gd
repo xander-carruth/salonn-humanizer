@@ -15,6 +15,10 @@ var animator: Node
 var _base_hips_height: float:
 	get:
 		return HumanizerTargetService.data.basis[HumanizerBodyService.hips_id].y
+		
+var base_head_height: float:
+	get:
+		return HumanizerTargetService.data.basis[HumanizerBodyService.head_top_id].y
 
 var save_path: String:
 	get:
@@ -32,6 +36,8 @@ var _save_path_valid: bool:
 var bake_surface_name: String
 var new_shapekey_name: String = ''
 var morph_data := {}
+
+@export var load_on_ready: bool = true
 
 ## The meshes selected to be baked to a new surface
 @export var _bake_meshes: Array[MeshInstance3D]
@@ -82,9 +88,11 @@ func _ready() -> void:
 	for child in get_children():
 		if child.name.begins_with('Baked-'):
 			baked = true
-	if not baked:
+	if load_on_ready and not baked:
+		print("load human")
 		load_human()
 	scene_loaded = true
+	print("Scene loaded")
 	
 ## For use in character editor scenes where the character should be 
 ## continuously updated with every change
@@ -154,6 +162,7 @@ func load_human() -> void:
 	reset_scene()
 	_deserialize()
 	notify_property_list_changed()
+	print("Done loading")
 	done_loading.emit()
 
 func create_human_branch() -> Node3D:
@@ -548,23 +557,36 @@ func add_shapekey() -> void:
 	_new_shapekeys[new_shapekey_name] = human_config.targets.duplicate(true)
 
 #### Materials ####
-func add_overlay(slot:String,overlay_id:String):
+func add_overlay(slot: String, overlay_id: String) -> void:
 	if baked:
 		printerr('Cannot change skin textures. Alrady baked.')
 		return
-	var equip:HumanizerEquipment = human_config.get_equipment_in_slot(slot)
-	var overlay = HumanizerResourceService.load_resource(equip.get_type().overlays[overlay_id]) 
+
+	var equip: HumanizerEquipment = human_config.get_equipment_in_slot(slot)
+	if equip == null:
+		return
+
+	var overlay = HumanizerResourceService.load_resource(equip.get_type().overlays[overlay_id])
+	if overlay == null:
+		return
+
 	overlay = overlay.duplicate()
 	equip.material_config.add_overlay(overlay)
 
-func remove_overlay(slot:String,overlay_id:String):
+func remove_overlay(slot: String, overlay_id: String) -> void:
 	if baked:
 		printerr('Cannot change skin textures. Alrady baked.')
 		return
-	var equip:HumanizerEquipment = human_config.get_equipment_in_slot(slot)
-	var overlay = HumanizerResourceService.load_resource(equip.get_type().overlays[overlay_id]) 
+
+	var equip: HumanizerEquipment = human_config.get_equipment_in_slot(slot)
+	if equip == null:
+		return
+
+	var overlay = HumanizerResourceService.load_resource(equip.get_type().overlays[overlay_id])
+	if overlay == null:
+		return
+
 	equip.material_config.remove_overlay_by_name(overlay.resource_name)
-	
 
 func set_equipment_texture_by_slot(slot_name:String, texture: String):
 	var equip = human_config.get_equipment_in_slot(slot_name)

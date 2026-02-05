@@ -44,7 +44,7 @@ static func from_material(material: StandardMaterial3D) -> HumanizerOverlay:
 	if material.ao_enabled and material.ao_texture != null:
 		dict.ao = material.ao_texture.resource_path
 	return from_dict(dict)
-
+	
 static func from_dict(data: Dictionary) -> HumanizerOverlay:
 	var overlay = HumanizerOverlay.new()
 	if data.has('offset'):

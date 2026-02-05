@@ -43,7 +43,7 @@ func set_material(material_name:String):
 	
 	if material is StandardMaterial3D:
 		material_config.base_material_path = mat_path
-		material_config.overlays.clear()
+		#material_config.overlays.clear()
 		var base_overlay = HumanizerOverlay.from_material(material)
 		material_config.add_overlay(base_overlay)
 	elif material is HumanizerMaterial:
@@ -54,6 +54,7 @@ func set_material(material_name:String):
 		# ---- CASE 3: ShaderMaterial .tres (your toon shader) ----
 	elif material is ShaderMaterial:
 		material_config.base_material_path = mat_path
+		material_config.overlays.clear()
 	else:
 		printerr("set_material: unsupported material type for ", material_name, " at path ", mat_path)
 

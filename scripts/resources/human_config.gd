@@ -78,6 +78,13 @@ func set_targets(new_targets:Dictionary):
 	HumanizerTargetService.set_targets(new_targets,targets,empty_helper)
 
 func _handle_color_overrides(equip:HumanizerEquipment):
+	if equip == null:
+		return
+	if equip.material_config == null:
+		return
+	if equip.material_config.overlays == null or equip.material_config.overlays.size() < 1:
+		return
+		
 	var equip_type = equip.get_type()
 	if equip_type.in_slot(["LeftEye","RightEye","Eyes"]):
 		if equip.material_config.overlays.size() > 1:

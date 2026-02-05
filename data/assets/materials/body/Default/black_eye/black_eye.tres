@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="HumanizerOverlay" load_steps=2 format=3 uid="uid://bno7pc0kx4kjg"]
 
-[ext_resource type="Script" path="res://addons/humanizer/scripts/resources/humanizer_overlay.gd" id="1_exmla"]
+[ext_resource type="Script" uid="uid://n0jncoq154d2" path="res://addons/humanizer/scripts/resources/humanizer_overlay.gd" id="1_exmla"]
 
 [resource]
 resource_name = "black_eye"
