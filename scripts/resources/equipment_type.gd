@@ -6,6 +6,8 @@ class_name HumanizerEquipmentType #base equipment definition
 @export_dir var path: String #folder
 @export var default_material: String
 @export var rigged: bool = false
+@export var gender: StringName = "general"
+@export_file("*.png", "*.webp") var thumbnail_path: String
 @export var textures: Dictionary
 @export var overlays: Dictionary
 @export var slots: Array[String]
