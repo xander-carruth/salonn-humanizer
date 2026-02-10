@@ -32,6 +32,33 @@ extends Resource
 		normal_strength = value
 		changed.emit()
 
+@export var metallic: float = 0.0:
+	set(value):
+		metallic = value
+		changed.emit()
+
+@export var roughness: float = 1.0:
+	set(value):
+		roughness = value
+		changed.emit()
+
+@export var disable_ambient_light: bool = true:
+	set(value):
+		disable_ambient_light = value
+		changed.emit()
+		
+# NEW: should this overlay override base PBR at all?
+@export var override_pbr: bool = true:
+	set(value):
+		override_pbr = value
+		changed.emit()
+
+# OPTIONAL: let some overlays (e.g. eyes) be almost unlit
+@export var unshaded: bool = false:
+	set(value):
+		unshaded = value
+		changed.emit()
+
 static func from_material(material: StandardMaterial3D) -> HumanizerOverlay:
 	var dict = {}
 	if material.albedo_texture != null:

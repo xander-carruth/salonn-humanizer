@@ -85,13 +85,66 @@ static func filter_equipment(filter: Dictionary) -> Array[HumanizerEquipmentType
 	return filtered
 
 
+#static func filter_target_presets(filter: Dictionary) -> Array[TargetPreset]:
+	#var filtered: Array[TargetPreset]
+	#for preset in target_presets.values():
+		#for key in filter:
+			#if key == &'slot':
+				#if filter[key] == preset.slot:
+					#filtered.append(preset)
+	#return filtered
+
 static func filter_target_presets(filter: Dictionary) -> Array[TargetPreset]:
-	var filtered: Array[TargetPreset]
+	var filtered: Array[TargetPreset] = []
+
+	# --- Normalize filters ---
+	var slot_values: Array = []
+	var gender_values: Array = []
+
+	# Accept both &'slot' and "slot" as keys
+	if filter.has(&"slot") or filter.has("slot"):
+		var raw_slot = filter.get(&"slot", filter.get("slot"))
+		if raw_slot is Array:
+			slot_values = raw_slot.duplicate()
+		elif raw_slot != null:
+			slot_values = [raw_slot]
+
+	if filter.has(&"gender") or filter.has("gender"):
+		var raw_gender = filter.get(&"gender", filter.get("gender"))
+		if raw_gender is Array:
+			gender_values = raw_gender.duplicate()
+		elif raw_gender != null:
+			gender_values = [raw_gender]
+
+	var has_slot_filter := slot_values.size() > 0
+	var has_gender_filter := gender_values.size() > 0
+
 	for preset in target_presets.values():
-		for key in filter:
-			if key == &'slot':
-				if filter[key] == preset.slot:
-					filtered.append(preset)
+		var matches := true
+
+		# --- Slot filter (OR within, AND with others) ---
+		if has_slot_filter:
+			var slot_match := false
+			for wanted_slot in slot_values:
+				if wanted_slot == preset.slot:
+					slot_match = true
+					break
+			if not slot_match:
+				matches = false
+
+		# --- Gender filter (OR within, AND with others) ---
+		if matches and has_gender_filter:
+			var gender_match := false
+			for wanted_gender in gender_values:
+				if preset.gender == wanted_gender:
+					gender_match = true
+					break
+			if not gender_match:
+				matches = false
+
+		if matches:
+			filtered.append(preset)
+
 	return filtered
 
 static func _get_rigs() -> void:

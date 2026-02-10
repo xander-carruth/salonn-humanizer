@@ -89,10 +89,8 @@ func _ready() -> void:
 		if child.name.begins_with('Baked-'):
 			baked = true
 	if load_on_ready and not baked:
-		print("load human")
 		load_human()
 	scene_loaded = true
-	print("Scene loaded")
 	
 ## For use in character editor scenes where the character should be 
 ## continuously updated with every change
@@ -162,7 +160,6 @@ func load_human() -> void:
 	reset_scene()
 	_deserialize()
 	notify_property_list_changed()
-	print("Done loading")
 	done_loading.emit()
 
 func create_human_branch() -> Node3D:

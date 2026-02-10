@@ -57,6 +57,7 @@ func generate_material_3D(material:StandardMaterial3D)->void:
 		for prop_name in material_property_names:
 			material.set(prop_name,base_material.get(prop_name))
 		material.resource_local_to_scene = true
+		
 	if overlays.size() == 0:
 		for tex_name in TEXTURE_LAYERS:
 			tex_name += "_texture"
@@ -77,8 +78,6 @@ func generate_material_3D(material:StandardMaterial3D)->void:
 		if not overlays[0].ao_texture_path in ["",null]:
 			material.set_texture(BaseMaterial3D.TEXTURE_AMBIENT_OCCLUSION, HumanizerResourceService.load_resource(overlays[0].ao_texture_path))
 	else:
-		print("overlay size 2")
-		
 		is_generating = true
 		# awaiting outside the main thread will switch to the main thread if the signal awaited is emitted by the main thread
 		HumanizerJobQueue.add_job_main_thread(func():
@@ -95,6 +94,27 @@ func generate_material_3D(material:StandardMaterial3D)->void:
 			done_generating.emit()
 		)
 	
+	# Reflectivity / ambient control (NEW)
+	# ----------------------------------------
+	var ov_for_surface: HumanizerOverlay = null
+	if overlays.size() >= 1:
+		ov_for_surface = overlays[0]
+
+	# Only override PBR if the overlay explicitly says so.
+	if ov_for_surface != null and ov_for_surface.override_pbr:
+		material.metallic = ov_for_surface.metallic
+		material.roughness = ov_for_surface.roughness
+		material.disable_ambient_light = ov_for_surface.disable_ambient_light
+	else:
+		# For “no overlay” or override_pbr == false:
+		# leave base_material’s lighting alone.
+		# (You can still clamp here globally if you want,
+		# but for eyes I'd keep the base values.)
+		pass
+
+	# Optional: allow some overlays to be effectively unlit
+	if ov_for_surface != null and ov_for_surface.unshaded:
+		material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	
 func _update_material() -> Dictionary:
 	var textures : Dictionary = {}
