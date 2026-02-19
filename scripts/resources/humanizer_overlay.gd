@@ -2,6 +2,12 @@
 class_name HumanizerOverlay
 extends Resource
 
+
+@export var overlay_id: String = "":
+	set(value):
+		overlay_id = value
+		changed.emit()
+		
 @export_file var albedo_texture_path: String:
 	set(value):
 		albedo_texture_path = value

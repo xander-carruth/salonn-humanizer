@@ -563,12 +563,7 @@ func add_overlay(slot: String, overlay_id: String) -> void:
 	if equip == null:
 		return
 
-	var overlay = HumanizerResourceService.load_resource(equip.get_type().overlays[overlay_id])
-	if overlay == null:
-		return
-
-	overlay = overlay.duplicate()
-	equip.material_config.add_overlay(overlay)
+	equip.add_overlay_by_id(overlay_id)
 
 func remove_overlay(slot: String, overlay_id: String) -> void:
 	if baked:

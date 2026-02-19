@@ -66,3 +66,16 @@ func get_type()->HumanizerEquipmentType:
 		return HumanizerRegistry.equipment[type]
 	printerr("Unknown equipment type: " + type)
 	return null
+	
+func add_overlay_by_id(overlay_id: String) -> void:
+	var overlay = null
+	if get_type().overlays.has(overlay_id):
+		overlay = HumanizerResourceService.load_resource(get_type().overlays[overlay_id])
+	else:
+		printerr("Overlay id not found in equip textures by HumanizerResourceService")
+	if overlay == null:
+		return
+
+	overlay = overlay.duplicate()
+	overlay.overlay_id = overlay_id
+	material_config.add_overlay(overlay)

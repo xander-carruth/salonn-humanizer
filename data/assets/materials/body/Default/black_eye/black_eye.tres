@@ -5,9 +5,15 @@
 [resource]
 resource_name = "black_eye"
 script = ExtResource("1_exmla")
+overlay_id = ""
 albedo_texture_path = "res://addons/humanizer/data/assets/overlay_examples/black_eye.png"
 normal_texture_path = ""
 ao_texture_path = ""
 color = Color(1, 1, 1, 1)
 offset = Vector2i(1618, 1046)
 normal_strength = 1.0
+metallic = 0.0
+roughness = 1.0
+disable_ambient_light = true
+override_pbr = true
+unshaded = false
