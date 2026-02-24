@@ -185,21 +185,19 @@ func init_equipment_material(equip:HumanizerEquipment): #called from thread
 
 	var material: Material
 
-	# --- NEW: shader-aware branch ---
 	if mat_config.is_shader_base():
 		# Base is a ShaderMaterial .tres – duplicate it and use as-is
 		var base_res = HumanizerResourceService.load_resource(mat_config.base_material_path)
 		var shader_mat := (base_res as ShaderMaterial).duplicate()
 		shader_mat.resource_local_to_scene = true
 
-		# Apply overlays + base color (use white as default tint here;
-		# runtime color setters will re-apply with the proper color).
+		# Apply base color
 		var base_color := _get_base_color_for_equip(equip)
 		mat_config.apply_to_material(shader_mat, base_color)
 
 		material = shader_mat
 	else:
-		# Old behavior: standard PBR pipeline driven by overlays
+		# Standard PBR pipeline driven by overlays, was in original Humanizer code
 		var std_mat := StandardMaterial3D.new()
 		std_mat.resource_local_to_scene = true
 		material = std_mat
@@ -220,18 +218,7 @@ func check_materials_done_generating():
 func set_equipment_material(equip:HumanizerEquipment, material_name: String)-> void:
 	human_config.set_equipment_material(equip,material_name)
 	init_equipment_material(equip)
-
-#func update_material(equip_type: String) -> void:
-	#var equip = human_config.equipment[equip_type]
-	#var mat_config: HumanizerMaterial = equip.material_config
-	#var material = materials[equip_type]
-#
-	## If this is a shader-based material, we don’t try to rebuild it
-	#if mat_config.is_shader_base():
-		#return
-#
-	## Standard case – re-generate properties/textures on the existing StandardMaterial3D
-	#mat_config.generate_material_3D(material as StandardMaterial3D)
+	
 
 func update_material(equip_type: String) -> void:
 	var equip: HumanizerEquipment = human_config.equipment.get(equip_type)
@@ -250,7 +237,7 @@ func update_material(equip_type: String) -> void:
 		# Original behavior: rebuild the StandardMaterial3D from overlays/base mat
 		mat_config.generate_material_3D(mat as StandardMaterial3D)
 	else:
-		# NEW: shader-based path (toon, etc.)
+		# Shader-based path (toon, etc.)
 		var base_color := _get_base_color_for_equip(equip)
 		mat_config.apply_to_material(mat, base_color)
 

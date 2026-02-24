@@ -51,15 +51,14 @@ func set_material(material_name:String):
 		material_config.overlays.clear()
 		for overlay in material.overlays:
 			material_config.add_overlay(overlay.duplicate())
-		# ---- CASE 3: ShaderMaterial .tres (your toon shader) ----
 	elif material is ShaderMaterial:
 		material_config.base_material_path = mat_path
 		material_config.overlays.clear()
 	else:
 		printerr("set_material: unsupported material type for ", material_name, " at path ", mat_path)
 
-	
 	texture_name = material_name
+		
 		
 func get_type()->HumanizerEquipmentType:
 	if type in HumanizerRegistry.equipment:
