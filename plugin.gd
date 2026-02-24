@@ -72,7 +72,7 @@ func _add_tool_submenu() -> void:
 	popup_menu.add_item('Purge Generated Asset Resources', menu_ids.purge_generated_assets)
 	popup_menu.add_item('Import All Assets', menu_ids.asset_importer)
 	popup_menu.add_item('Import Selected Folder', menu_ids.import_selected_folder)
-	popup_menu.add_item('Unimport Selected Folder', menu_ids.delete_equipment)
+	popup_menu.add_item('Unimport Selected Folder(s)', menu_ids.delete_equipment)
 	
 	popup_menu.add_item('Reload Registry', menu_ids.reload_registry)
 	popup_menu.add_item('Run Test Function', menu_ids.test)
