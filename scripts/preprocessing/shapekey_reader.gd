@@ -39,6 +39,7 @@ func run():
 func _process_shapekey(path: String,prefix:String=""):
 	var start_offset = target_data.index.size()
 	var shape_name = prefix + path.get_file().get_basename()
+		
 	var target_file = FileAccess.open(path, FileAccess.READ)
 
 	while target_file.get_position() < target_file.get_length():
